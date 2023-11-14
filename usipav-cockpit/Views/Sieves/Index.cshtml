@@ -1,0 +1,237 @@
+﻿@model List<SieveViewModel>
+
+<h1>Peneiras</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Temperatura Máxima</th>
+            <th>Temperatura Mínima</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody id="itemList">
+        @foreach (var item in Model)
+        {
+            <tr id="item-@item.Id">
+                <td class="name">@item.Name</td>
+                <td class="description">@item.Description</td>
+                <td class="max-temperature">@item.MaxTemperature</td>
+                <td class="min-temperature">@item.MinTemperature</td>
+                <td>
+                    <a class="btn btn-primary" data-toggle="modal" data-target="#editModal-@item.Id">Editar</a>
+                    <a class="btn btn-danger" data-toggle="modal" data-target="#deleteModal-@item.Id">Deletar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-success" data-toggle="modal" data-target="#addModal">Adicionar</button>
+
+<!-- Modal de Adicionar -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Adicionar Peneira</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form asp-controller="Sieves" asp-action="Post" method="post">
+                    <div class="form-group">
+                        <label for="Name">Nome</label>
+                        <input id="PostName" name="Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Description">Descrição</label>
+                        <input id="PostDescription" name="Description" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="MaxTemperature">Temperatura Máxima</label>
+                        <input id="PostMaxTemperature" name="MaxTemperature" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label for="MinTemperature">Temperatura Mínima</label>
+                        <input id="PostMinTemperature" name="MinTemperature" class="form-control" />
+                    </div>
+                    <button type="button" id="createButton" data-dismiss="modal" class="btn btn-primary" onclick="postItem()">Salvar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@foreach (var item in Model)
+{
+    <div class="modal fade" id="editModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Peneira</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form asp-controller="Sieves" asp-action="Put" id="editForm-@item.Id">
+                        @Html.Hidden("Id", item.Id)
+                        @Html.Hidden("Active", item.Active)
+                        @Html.Hidden("CreatedAt", item.CreatedAt)
+                        <div class="form-group">
+                            <label for="Name">Nome</label>
+                            <input id="EditName" name="Name" class="form-control" value="@item.Name" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Description">Descrição</label>
+                            <input id="EditDescription" name="Description" class="form-control" value="@item.Description" />
+                        </div>
+                        <div class="form-group">
+                            <label for="MaxTemperature">Temperatura Máxima</label>
+                            <input id="EditMaxTemperature" name="MaxTemperature" class="form-control" value="@item.MaxTemperature" />
+                        </div>
+                        <div class="form-group">
+                            <label for="MinTemperature">Temperatura Mínima</label>
+                            <input id="EditMinTemperature" name="MinTemperature" class="form-control" value="@item.MinTemperature" />
+                        </div>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" onclick="putItem(@item.Id)">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@foreach (var item in Model)
+{
+    <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Sieve</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja deletar a peneira: @item.Name?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger" href="javascript:void(0);" data-dismiss="modal" onclick="deleteItem(@item.Id)">Deletar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    function getSieveById(id) {
+        var sievesList = @Html.Raw(Json.Serialize(Model));
+        var item = sievesList.find(item => item.id === id);
+
+        return item;
+    }
+
+    function putItem(id) {
+        var form = $('#editForm-' + id);
+
+        var formData = {
+            Name: form.find('#EditName').val(),
+            Description: form.find('#EditDescription').val(),
+            MaxTemperature: form.find('#EditMaxTemperature').val(),
+            MinTemperature: form.find('#EditMinTemperature').val(),
+            Id: form.find('#Id').val(),
+            Active: form.find('#Active').val(),
+            CreatedAt: form.find('#CreatedAt').val()
+        };
+
+        $.ajax({
+            type: 'PUT',
+            url: '/Sieves',
+            data: JSON.stringify(formData),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem("AuthToken")
+            },
+            success: function (data) {
+                var listItem = $('#item-' + formData.Id);
+                listItem.find('.name').text(formData.Name);
+                listItem.find('.description').text(formData.Description);
+                listItem.find('.max-temperature').text(formData.MaxTemperature);
+                listItem.find('.min-temperature').text(formData.MinTemperature);
+                listItem.find('.active').text(formData.Active);
+                listItem.find('.created-at').text(formData.CreatedAt);
+            },
+            error: function (xhr, status, error) {
+            }
+        });
+    }
+
+    function postItem() {
+        var form = $('#addModal');
+
+        var formData = {
+            Name: form.find('#PostName').val(),
+            Description: form.find('#PostDescription').val(),
+            MaxTemperature: form.find('#PostMaxTemperature').val(),
+            MinTemperature: form.find('#PostMinTemperature').val()
+        };
+
+        $.ajax({
+            type: 'POST',
+            url: '/Sieves',
+            data: JSON.stringify(formData),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem("AuthToken")
+            },
+            success: function (data) {
+                var itemList = $('#itemList');
+
+                var newItem = $('<tr id="item-' + formData.Id + '">' +
+                    '<td class="name">' + formData.Name + '</td>' +
+                    '<td class="description">' + formData.Description + '</td>' +
+                    '<td class="max-temperature">' + formData.MaxTemperature + '</td>' +
+                    '<td class="min-temperature">' + formData.MinTemperature + '</td>' +
+                    '<td>' +
+                    '<a class="btn btn-primary" data-toggle="modal" data-target="#editModal-' + formData.Id + '">Editar</a>' +
+                    '<a class="btn btn-danger" data-toggle="modal" data-target="#deleteModal-' + formData.Id + '">Deletar</a>' +
+                    '</td>' +
+                    '</tr>');
+
+                itemList.append(newItem);
+            },
+            error: function (xhr, status, error) {
+            }
+        });
+    }
+
+    function deleteItem(itemId) {
+        $.ajax({
+            type: 'DELETE',
+            url: '/Sieves/' + itemId,
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem("AuthToken")
+            },
+            success: function (data) {
+                var listItem = $('#item-' + itemId);
+                if (listItem) {
+                    listItem.remove();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Erro ao excluir o item:', error);
+            }
+        });
+    }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
